@@ -1,20 +1,19 @@
-FROM n8nio/n8n:latest
+FROM node:18-alpine
 
-ARG PGPASSWORD
-ARG PGHOST
-ARG PGPORT
-ARG PGDATABASE
-ARG PGUSER
+ARG N8N_VERSION=1.104.2
 
-ENV DB_TYPE=postgresdb
-ENV DB_POSTGRESDB_DATABASE=$PGDATABASE
-ENV DB_POSTGRESDB_HOST=$PGHOST
-ENV DB_POSTGRESDB_PORT=$PGPORT
-ENV DB_POSTGRESDB_USER=$PGUSER
-ENV DB_POSTGRESDB_PASSWORD=$PGPASSWORD
+RUN apk add --update graphicsmagick tzdata
 
-ARG ENCRYPTION_KEY
+USER root
 
-ENV N8N_ENCRYPTION_KEY=$ENCRYPTION_KEY
+RUN apk --update add --virtual build-dependencies python3 build-base && \
+    npm_config_user=root npm install --location=global n8n@${N8N_VERSION} && \
+    apk del build-dependencies
 
-CMD ["n8n start"]
+WORKDIR /data
+
+EXPOSE $PORT
+
+ENV N8N_USER_ID=root
+
+CMD export N8N_PORT=$PORT && n8n start
